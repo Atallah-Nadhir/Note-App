@@ -21,8 +21,22 @@ function NoteBody() {
   let [deleteState, setDeleteState] = useState(false);
   let [editState, setEditState] = useState(false);
   let [addState, setAddState] = useState(false);
-  let [editedNote, setEditedNote] = useState({ title: "", desc: "" });
-  let [addNote, setAddNote] = useState({ title: "", desc: "" });
+  let [editedNote, setEditedNote] = useState({
+    title: "",
+    desc: "",
+    name: "",
+    address: "",
+    phone: "",
+    notes: "",
+  });
+  let [addNote, setAddNote] = useState({
+    title: "",
+    desc: "",
+    name: "",
+    address: "",
+    phone: "",
+    notes: "",
+  });
 
   const getNotes = async () => {
     var { data } = await axios.get(`${baseURL}getUserNotes`, {
@@ -53,7 +67,6 @@ function NoteBody() {
     handleClose();
     setWaiting(false);
   };
-
   const activeDelete = () => {
     setDeleteState(true);
     setEditState(false);
@@ -91,6 +104,10 @@ function NoteBody() {
     const res = await axios.put(`${baseURL}updateNote`, {
       title: editedNote.title,
       desc: editedNote.desc,
+      name: editedNote.name,
+      address: editedNote.address,
+      phone: editedNote.phone,
+      notes: editedNote.notes,
       NoteID: noteId,
       token,
     });
@@ -105,14 +122,27 @@ function NoteBody() {
     const res = await axios.post(`${baseURL}addNote`, {
       title: addNote.title,
       desc: addNote.desc,
+      name: addNote.name,
+      address: addNote.address,
+      phone: addNote.phone,
+      notes: addNote.notes,
       userID: decoded._id,
       token,
     });
+
     console.log(res);
+
     getNotes();
     handleClose();
     setWaiting(false);
-    setAddNote({ title: "", desc: "" });
+    setAddNote({
+      title: "",
+      desc: "",
+      name: "",
+      address: "",
+      phone: "",
+      notes: "",
+    });
   };
 
   const saveValueOfAddNoteInputs = ({ target }) => {
@@ -198,24 +228,94 @@ function NoteBody() {
             )}
           </Modal.Title>
         </Modal.Header>
+
         <Modal.Body className={Style.modalColor}>
           {deleteState && "Are you sure ?"}
           {editState && (
-            <Form.Control
-              onChange={saveValueOfEditNoteInputs}
-              type="text"
-              placeholder="Enter Note Description"
-              name="desc"
-              value={editedNote.desc}
-            />
+            <>
+              <Form.Control
+                onChange={saveValueOfEditNoteInputs}
+                type="text"
+                placeholder="Enter Note Description"
+                name="desc"
+                value={editedNote.desc}
+              />
+              <Form.Control
+                style={{ margin: 10 }}
+                onChange={saveValueOfEditNoteInputs}
+                type="text"
+                placeholder="Enter Name"
+                name="name"
+                value={editedNote.name}
+              />
+              <Form.Control
+                style={{ margin: 10 }}
+                onChange={saveValueOfEditNoteInputs}
+                type="text"
+                placeholder="Enter Address"
+                name="address"
+                value={editedNote.address}
+              />
+              <Form.Control
+                style={{ margin: 10 }}
+                onChange={saveValueOfEditNoteInputs}
+                type="text"
+                placeholder="Enter Phone"
+                name="phone"
+                value={editedNote.phone}
+              />
+              <Form.Control
+                style={{ margin: 10 }}
+                onChange={saveValueOfEditNoteInputs}
+                type="text"
+                placeholder="Enter Notes"
+                name="notes"
+                value={editedNote.notes}
+                as="textarea"
+                rows={6}
+              />
+            </>
           )}
           {addState && (
-            <Form.Control
-              onChange={saveValueOfAddNoteInputs}
-              type="text"
-              placeholder="Enter Note Description"
-              name="desc"
-            />
+            <>
+              <Form.Control
+                style={{ margin: 10 }}
+                onChange={saveValueOfAddNoteInputs}
+                type="text"
+                placeholder="Enter Note Description"
+                name="desc"
+              />
+              <Form.Control
+                style={{ margin: 10 }}
+                onChange={saveValueOfAddNoteInputs}
+                type="text"
+                placeholder="Enter Name"
+                name="name"
+              />
+              <Form.Control
+                style={{ margin: 10 }}
+                onChange={saveValueOfAddNoteInputs}
+                type="text"
+                placeholder="Enter Address"
+                name="address"
+              />
+              <Form.Control
+                style={{ margin: 10 }}
+                onChange={saveValueOfAddNoteInputs}
+                type="text"
+                placeholder="Enter Phone"
+                name="phone"
+              />
+              <Form.Control
+                style={{ margin: 10 }}
+                onChange={saveValueOfAddNoteInputs}
+                type="text"
+                placeholder="Enter Notes"
+                name="notes"
+                as="textarea"
+                rows={6}
+              />
+            </>
           )}
         </Modal.Body>
         <Modal.Footer>
@@ -240,7 +340,7 @@ function NoteBody() {
                 editNote(noteId);
               }}
             >
-              {!waiting && "Edit"}
+              {!waiting && "Save"}
               {waiting && "Wait ... "}
             </Button>
           )}

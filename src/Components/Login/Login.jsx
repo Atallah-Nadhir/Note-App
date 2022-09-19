@@ -6,7 +6,8 @@ import Alert from "react-bootstrap/Alert";
 import { Navigate } from "react-router-dom";
 
 function Login() {
-  const baseURL = "https://route-egypt-api.herokuapp.com/";
+  //   const baseURL = "https://route-egypt-api.herokuapp.com/";
+  const baseURL = "https://dsu61d-5000.preview.csb.app/";
   const [error, setError] = useState("");
   const [user, setUser] = useState({
     email: "",
@@ -24,7 +25,12 @@ function Login() {
   const sendData = async (e) => {
     e.preventDefault();
     setWaiting(true);
-    const res = await axios.post(`${baseURL}signin`, user);
+    const res = await axios
+      .post(`${baseURL}api/auth`, user)
+      .catch(function (error) {
+        console.log(error.toJSON());
+      });
+    console.log(res.data.message);
     setWaiting(false);
     if (res.data.message === "success") {
       localStorage.setItem("noteToken", res.data.token);
@@ -39,7 +45,7 @@ function Login() {
     <>
       {success && <Navigate to="/" />}
       <div className=" vh-100 d-flex justify-content-center align-items-center">
-        <Form className='w-50' onSubmit={sendData}>
+        <Form className="w-50" onSubmit={sendData}>
           <Form.Group className="mb-3" controlId="formBasicEmail">
             <Form.Control
               name="email"

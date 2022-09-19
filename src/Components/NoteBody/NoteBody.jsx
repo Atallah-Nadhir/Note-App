@@ -10,10 +10,9 @@ import Form from "react-bootstrap/Form";
 import { faPlusSquare } from "@fortawesome/free-regular-svg-icons";
 
 function NoteBody() {
-  const baseURL = "https://route-egypt-api.herokuapp.com/";
+  const baseURL = process.env.REACT_APP_BASE_URL;
   const token = localStorage.getItem("noteToken");
   const decoded = jwt_decode(token);
-
   let [notes, setNotes] = useState([]);
   let [show, setShow] = useState(false);
   let [noteId, setNoteId] = useState("");
@@ -22,34 +21,30 @@ function NoteBody() {
   let [editState, setEditState] = useState(false);
   let [addState, setAddState] = useState(false);
   let [editedNote, setEditedNote] = useState({
-    title: "",
-    desc: "",
     name: "",
     address: "",
     phone: "",
     notes: "",
   });
   let [addNote, setAddNote] = useState({
-    title: "",
-    desc: "",
     name: "",
     address: "",
     phone: "",
     notes: "",
   });
 
-  const getNotes = async () => {
-    var { data } = await axios.get(`${baseURL}getUserNotes`, {
+  const getOrders = async () => {
+    var { data } = await axios.get(`${baseURL}/api/orders`, {
       headers: {
         token,
         userID: decoded._id,
       },
     });
-    setNotes(data.Notes);
+    setNotes(data);
   };
 
   useEffect(() => {
-    getNotes();
+    getOrders();
   }, []);
 
   const handleClose = () => setShow(false);
@@ -57,26 +52,29 @@ function NoteBody() {
 
   const deleteNote = async (id) => {
     setWaiting(true);
-    const res = await axios.delete(`${baseURL}deleteNote`, {
+    const res = await axios.delete(`${baseURL}/deleteNote`, {
       data: {
         NoteID: id,
         token,
       },
     });
-    getNotes();
+    getOrders();
     handleClose();
     setWaiting(false);
   };
+
   const activeDelete = () => {
     setDeleteState(true);
     setEditState(false);
     setAddState(false);
   };
+
   const activeEdit = () => {
     setEditState(true);
     setDeleteState(false);
     setAddState(false);
   };
+
   const activeAdd = () => {
     setAddState(true);
     setDeleteState(false);
@@ -85,54 +83,61 @@ function NoteBody() {
 
   const saveValueOfEditNoteInputs = ({ target }) => {
     setEditedNote({ ...editedNote, [target.name]: target.value });
-    console.log(editedNote);
   };
 
   const handlingEditInputs = (id) => {
+    const note = notes.filter((note) => {
+      return note._id === id;
+    })[0];
+
+    console.log(note);
+
     setEditedNote({
-      title: notes.filter((note) => {
-        return note._id === id;
-      })[0].title,
-      desc: notes.filter((note) => {
-        return note._id === id;
-      })[0].desc,
+      name: note.name,
+      phone: note.phone,
+      address: note.address,
+      notes: note.notes,
     });
   };
 
-  const editNote = async (id) => {
+  const editOrder = async (id) => {
     setWaiting(true);
-    const res = await axios.put(`${baseURL}updateNote`, {
-      title: editedNote.title,
-      desc: editedNote.desc,
-      name: editedNote.name,
-      address: editedNote.address,
-      phone: editedNote.phone,
-      notes: editedNote.notes,
-      NoteID: noteId,
-      token,
-    });
-    console.log(res);
-    getNotes();
+    const res = await axios.put(
+      `${baseURL}/api/orders/${id}`,
+      {
+        name: editedNote.name,
+        address: editedNote.address,
+        phone: editedNote.phone,
+        notes: editedNote.notes,
+        NoteID: noteId,
+        tagId: "63228d1086ae372dedf27f01",
+        tag: "FisrtTag",
+      },
+      { headers: { token } }
+    );
+
+    getOrders();
     handleClose();
     setWaiting(false);
   };
 
-  const addNewNote = async () => {
+  const addNewOrder = async () => {
     setWaiting(true);
-    const res = await axios.post(`${baseURL}addNote`, {
-      title: addNote.title,
-      desc: addNote.desc,
-      name: addNote.name,
-      address: addNote.address,
-      phone: addNote.phone,
-      notes: addNote.notes,
-      userID: decoded._id,
-      token,
-    });
+    const res = await axios.post(
+      `${baseURL}/api/orders`,
+      {
+        name: addNote.name,
+        address: addNote.address,
+        phone: addNote.phone,
+        notes: addNote.notes,
+        user: decoded._id,
+        tagId: "63228d1086ae372dedf27f01",
+        tag: "FisrtTag",
+      },
+      { headers: { token } }
+    );
 
-    console.log(res);
-
-    getNotes();
+    getOrders();
     handleClose();
     setWaiting(false);
     setAddNote({
@@ -149,6 +154,8 @@ function NoteBody() {
     setAddNote({ ...addNote, [target.name]: target.value });
     console.log(addNote);
   };
+
+  console.log(editedNote);
 
   return (
     <>
@@ -169,8 +176,8 @@ function NoteBody() {
               <div key={value._id} className="col-lg-4 mb-4">
                 <div className="note p-4 bg-warning text-dark">
                   <div className="noteHeader d-flex justify-content-around">
-                    <div className="title w-50">
-                      <h3>{value.title}</h3>
+                    <div className="">
+                      <h6>{value._id}</h6>
                     </div>
                     <div className="noteIcons d-flex justify-content-around w-25">
                       <FontAwesomeIcon
@@ -195,7 +202,10 @@ function NoteBody() {
                     </div>
                   </div>
                   <div className="noteBody">
-                    <p>{value.desc}</p>
+                    <p> Name : {value.name}</p>
+                    <p> Address : {value.address}</p>
+                    <p>Phone : {value.phone}</p>
+                    <pre> Notes : {value.notes}</pre>
                   </div>
                 </div>
               </div>
@@ -233,13 +243,6 @@ function NoteBody() {
           {deleteState && "Are you sure ?"}
           {editState && (
             <>
-              <Form.Control
-                onChange={saveValueOfEditNoteInputs}
-                type="text"
-                placeholder="Enter Note Description"
-                name="desc"
-                value={editedNote.desc}
-              />
               <Form.Control
                 style={{ margin: 10 }}
                 onChange={saveValueOfEditNoteInputs}
@@ -337,7 +340,7 @@ function NoteBody() {
             <Button
               variant="warning"
               onClick={() => {
-                editNote(noteId);
+                editOrder(noteId);
               }}
             >
               {!waiting && "Save"}
@@ -348,7 +351,7 @@ function NoteBody() {
             <Button
               variant="primary"
               onClick={() => {
-                addNewNote();
+                addNewOrder();
               }}
             >
               {!waiting && "Add"}

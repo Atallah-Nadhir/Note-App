@@ -1,8 +1,7 @@
 const mongoose = require("mongoose");
-const config = require("config");
-const db =
-  "mongodb+srv://admin:nadiroo_1995@cluster01.pyhow.mongodb.net/ckam-db?retryWrites=true&w=majority";
-// config.get('mongoURI');
+
+require("dotenv").config();
+const db = process.env.db;
 
 const connectDB = async () => {
   try {

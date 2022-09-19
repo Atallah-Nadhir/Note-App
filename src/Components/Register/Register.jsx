@@ -6,6 +6,8 @@ import Alert from "react-bootstrap/Alert";
 import { Navigate } from "react-router-dom";
 
 function Register() {
+  //   const baseURL = "https://route-egypt-api.herokuapp.com/";
+  const baseURL = "https://dsu61d-5000.preview.csb.app/";
   const [error, setError] = useState("");
   const [user, setUser] = useState({
     name: "",
@@ -25,11 +27,12 @@ function Register() {
   const sendData = async (e) => {
     e.preventDefault();
     setWaiting(true);
+    // const res = await axios.post(`${baseURL}signup`, user);
 
     const res = await axios
-      .post(`${process.env.REACT_APP_BASE_URL}/api/users`, user)
+      .post(`${baseURL}api/users`, user)
       .catch(function (error) {
-        setError(error.toJSON());
+        console.log(error.toJSON());
       });
 
     setWaiting(false);

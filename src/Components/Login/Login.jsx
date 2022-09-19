@@ -6,6 +6,8 @@ import Alert from "react-bootstrap/Alert";
 import { Navigate } from "react-router-dom";
 
 function Login() {
+  //   const baseURL = "https://route-egypt-api.herokuapp.com/";
+  const baseURL = "https://dsu61d-5000.preview.csb.app/";
   const [error, setError] = useState("");
   const [user, setUser] = useState({
     email: "",
@@ -24,10 +26,11 @@ function Login() {
     e.preventDefault();
     setWaiting(true);
     const res = await axios
-      .post(`${process.env.REACT_APP_BASE_URL}/api/auth`, user)
+      .post(`${baseURL}api/auth`, user)
       .catch(function (error) {
-        setError(error.toJSON());
+        console.log(error.toJSON());
       });
+    console.log(res.data.message);
     setWaiting(false);
     if (res.data.message === "success") {
       localStorage.setItem("noteToken", res.data.token);

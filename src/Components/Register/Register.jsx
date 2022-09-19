@@ -29,6 +29,7 @@ function Register() {
     const res = await axios
       .post(`${process.env.REACT_APP_BASE_URL}/api/users`, user)
       .catch(function (error) {
+        console.log(error.toJSON());
         setError(error.toJSON());
       });
 

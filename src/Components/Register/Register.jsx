@@ -6,10 +6,11 @@ import Alert from "react-bootstrap/Alert";
 import { Navigate } from "react-router-dom";
 
 function Register() {
-  const baseURL = "https://route-egypt-api.herokuapp.com/";
+  //   const baseURL = "https://route-egypt-api.herokuapp.com/";
+  const baseURL = "https://dsu61d-5000.preview.csb.app/";
   const [error, setError] = useState("");
   const [user, setUser] = useState({
-    first_name: "",
+    name: "",
     last_name: "",
     email: "",
     password: "",
@@ -26,7 +27,14 @@ function Register() {
   const sendData = async (e) => {
     e.preventDefault();
     setWaiting(true);
-    const res = await axios.post(`${baseURL}signup`, user);
+    // const res = await axios.post(`${baseURL}signup`, user);
+
+    const res = await axios
+      .post(`${baseURL}api/users`, user)
+      .catch(function (error) {
+        console.log(error.toJSON());
+      });
+
     setWaiting(false);
     if (res.data.message === "success") {
       setSuccess(true);
@@ -43,9 +51,9 @@ function Register() {
         <Form className="w-50" onSubmit={sendData}>
           <Form.Group className="mb-3" controlId="formBasicFirstName">
             <Form.Control
-              name="first_name"
+              name="name"
               type="text"
-              placeholder="First name"
+              placeholder="Name"
               onChange={getUser}
             />
           </Form.Group>

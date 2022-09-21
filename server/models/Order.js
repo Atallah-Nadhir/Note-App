@@ -6,7 +6,7 @@ const OrderSchema = new Schema({
     type: Schema.Types.ObjectId,
     ref: "users",
   },
-   number: {
+  number: {
     type: Number,
     required: true,
   },
@@ -18,11 +18,11 @@ const OrderSchema = new Schema({
     type: String,
     required: true,
   },
-   phone: {
+  phone: {
     type: String,
     required: true,
   },
-   notes: {
+  notes: {
     type: String,
   },
   completed: {
@@ -32,6 +32,10 @@ const OrderSchema = new Schema({
   confirmed: {
     type: Boolean,
     default: false,
+  },
+  state: {
+    type: String,
+    default: "new",
   },
   tags: [
     {

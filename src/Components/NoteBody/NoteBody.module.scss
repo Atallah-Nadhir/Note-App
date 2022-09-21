@@ -1,3 +1,5 @@
+.noteIcon {  margin:10px }
+
 .noteIcon:hover {
   color: rgb(122, 32, 32);
   transition: all 0.5s;
@@ -8,6 +10,10 @@
   color: black !important;
 }
 
-.modalInput {
-    margin : 10;
+.confirmedOrders{
+    background : #a5f57d
+}
+
+.completedOrders{
+    background : #0a93fc
 }

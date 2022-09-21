@@ -1,6 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCalendarMinus, faEdit } from "@fortawesome/free-solid-svg-icons";
+import {
+  faTrash,
+  faEdit,
+  faCheck,
+  faCheckSquare,
+  faTruck,
+} from "@fortawesome/free-solid-svg-icons";
 import axios from "axios";
 import jwt_decode from "jwt-decode";
 import Style from "./NoteBody.module.scss";
@@ -14,18 +20,28 @@ function NoteBody() {
   const token = localStorage.getItem("noteToken");
   const decoded = jwt_decode(token);
   let [notes, setNotes] = useState([]);
+  let [filteredOrders, setFilteredOrders] = useState([]);
+  let [filter, setFiler] = useState(null);
   let [show, setShow] = useState(false);
   let [noteId, setNoteId] = useState("");
   let [waiting, setWaiting] = useState(false);
-  let [deleteState, setDeleteState] = useState(false);
-  let [editState, setEditState] = useState(false);
-  let [addState, setAddState] = useState(false);
+
+  let [orderState, setOrderState] = useState({
+    addState: false,
+    editState: false,
+    deleteState: false,
+    confirmState: false,
+    completeState: false,
+    state: null,
+  });
+
   let [editedNote, setEditedNote] = useState({
     name: "",
     address: "",
     phone: "",
     notes: "",
   });
+
   let [addNote, setAddNote] = useState({
     name: "",
     address: "",
@@ -47,12 +63,19 @@ function NoteBody() {
     getOrders();
   }, []);
 
+  useEffect(() => {
+    let filteredOrders = filter
+      ? notes.filter((note) => note.state === filter)
+      : notes;
+    setFilteredOrders(filteredOrders);
+  }, [filter, notes]);
+
   const handleClose = () => setShow(false);
   const handleShow = () => setShow(true);
 
-  const deleteNote = async (id) => {
+  const deleteOrder = async (id) => {
     setWaiting(true);
-    const res = await axios.delete(`${baseURL}/deleteNote`, {
+    const res = await axios.delete(`${baseURL}/api/orders/${id}`, {
       data: {
         NoteID: id,
         token,
@@ -63,24 +86,6 @@ function NoteBody() {
     setWaiting(false);
   };
 
-  const activeDelete = () => {
-    setDeleteState(true);
-    setEditState(false);
-    setAddState(false);
-  };
-
-  const activeEdit = () => {
-    setEditState(true);
-    setDeleteState(false);
-    setAddState(false);
-  };
-
-  const activeAdd = () => {
-    setAddState(true);
-    setDeleteState(false);
-    setEditState(false);
-  };
-
   const saveValueOfEditNoteInputs = ({ target }) => {
     setEditedNote({ ...editedNote, [target.name]: target.value });
   };
@@ -89,8 +94,6 @@ function NoteBody() {
     const note = notes.filter((note) => {
       return note._id === id;
     })[0];
-
-    console.log(note);
 
     setEditedNote({
       name: note.name,
@@ -152,60 +155,144 @@ function NoteBody() {
 
   const saveValueOfAddNoteInputs = ({ target }) => {
     setAddNote({ ...addNote, [target.name]: target.value });
-    console.log(addNote);
   };
 
-  console.log(editedNote);
+  const UpdateModelState = (name) => {
+    setOrderState({
+      addState: name === "addState",
+      editState: name === "editState",
+      deleteState: name === "deleteState",
+      confirmState: name === "confirmState",
+      completeState: name === "completeState",
+    });
+
+    handleShow();
+  };
+
+  const UpdateOrderState = async (id, state) => {
+    setWaiting(true);
+    const { data } = await axios.put(
+      `${baseURL}/api/orders/state/${id}`,
+      { state: state },
+      { headers: { token } }
+    );
+    getOrders();
+    handleClose();
+    setWaiting(false);
+  };
 
   return (
     <>
       <Button
         variant="primary"
-        className="my-5"
+        className="my-5 m-2"
         onClick={() => {
-          activeAdd();
-          handleShow();
+          UpdateModelState("addState");
         }}
       >
-        <FontAwesomeIcon icon={faPlusSquare} /> Add New Note
+        <FontAwesomeIcon icon={faPlusSquare} /> Add New Order
       </Button>
+
+      <Button
+        variant="primary"
+        className="my-5 m-2"
+        onClick={() => {
+          setFiler("new");
+        }}
+      >
+        New
+      </Button>
+
+      <Button
+        variant="primary"
+        className="my-5 m-2"
+        onClick={() => {
+          setFiler("confirmed");
+        }}
+      >
+        Confirmed
+      </Button>
+
+      <Button
+        variant="primary"
+        className="my-5 m-2"
+        onClick={() => {
+          setFiler("completed");
+        }}
+      >
+        Completed
+      </Button>
+      {filter && (
+        <Button
+          variant="danger"
+          className="my-5 m-2"
+          onClick={() => {
+            setFiler(null);
+          }}
+        >
+          clear filter
+        </Button>
+      )}
       <div className="row">
-        {notes &&
-          notes.map((value, index) => {
-            return (
+        {filteredOrders &&
+          filteredOrders.map((value, index) => {
+            return value.state === "completed" && !filter ? null : (
               <div key={value._id} className="col-lg-4 mb-4">
-                <div className="note p-4 bg-warning text-dark">
-                  <div className="noteHeader d-flex justify-content-around">
-                    <div className="">
-                      <h6>{value._id}</h6>
-                    </div>
-                    <div className="noteIcons d-flex justify-content-around w-25">
+                <div
+                  className={`note p-4 text-dark  ${
+                    value.state === "completed"
+                      ? Style.completedOrders
+                      : value.state === "confirmed"
+                      ? Style.confirmedOrders
+                      : "bg-warning"
+                  } `}
+                >
+                  <div className="noteHeader mb-2 d-flex justify-content-around">
+                    <div className="noteIcons d-flex justify-content-around">
                       <FontAwesomeIcon
                         className={Style.noteIcon}
-                        icon={faCalendarMinus}
+                        icon={faTrash}
                         onClick={() => {
-                          activeDelete();
+                          UpdateModelState("deleteState");
                           setNoteId(value._id);
-                          handleShow();
                         }}
                       />
                       <FontAwesomeIcon
                         className={Style.noteIcon}
                         icon={faEdit}
                         onClick={async () => {
-                          activeEdit();
-                          await setNoteId(`${value._id}`);
+                          //   activeEdit();
+                          UpdateModelState("editState");
+                          setNoteId(`${value._id}`);
                           handlingEditInputs(value._id);
-                          handleShow();
+                        }}
+                      />
+                      <FontAwesomeIcon
+                        className={Style.noteIcon}
+                        icon={value.confirmed ? faCheckSquare : faCheck}
+                        onClick={async () => {
+                          UpdateModelState("confirmState");
+                          setNoteId(`${value._id}`);
+                        }}
+                      />
+                      <FontAwesomeIcon
+                        className={Style.noteIcon}
+                        icon={faTruck}
+                        onClick={async () => {
+                          UpdateModelState("completeState");
+                          setNoteId(`${value._id}`);
                         }}
                       />
                     </div>
                   </div>
+
                   <div className="noteBody">
                     <p> Name : {value.name}</p>
                     <p> Address : {value.address}</p>
-                    <p>Phone : {value.phone}</p>
-                    <pre> Notes : {value.notes}</pre>
+                    <p> Phone : {value.phone}</p>
+                    <p> Notes : </p>
+                    <p style={{ whiteSpace: "pre" }}>{value.notes} </p>
+                    <p> {value.date.split("T")[0]}</p>
                   </div>
                 </div>
               </div>
@@ -218,30 +305,17 @@ function NoteBody() {
       <Modal show={show} onHide={handleClose}>
         <Modal.Header>
           <Modal.Title className={Style.modalColor}>
-            {deleteState && "Delete Note"}
-            {editState && (
-              <Form.Control
-                onChange={saveValueOfEditNoteInputs}
-                type="text"
-                placeholder="Enter Note Title"
-                name="title"
-                value={editedNote.title}
-              />
-            )}
-            {addState && (
-              <Form.Control
-                onChange={saveValueOfAddNoteInputs}
-                type="text"
-                placeholder="Enter Note Title"
-                name="title"
-              />
-            )}
+            {orderState.editState && "Delete Order"}
+            {orderState.editState && "Update Order"}
+            {orderState.addState && "Add Order"}
+            {orderState.confirmState && "Confirm Order"}
+            {orderState.completeState && "Ship Order"}
           </Modal.Title>
         </Modal.Header>
 
         <Modal.Body className={Style.modalColor}>
-          {deleteState && "Are you sure ?"}
-          {editState && (
+          {orderState.deleteState && "Are you sure ?"}
+          {orderState.editState && (
             <>
               <Form.Control
                 style={{ margin: 10 }}
@@ -279,7 +353,7 @@ function NoteBody() {
               />
             </>
           )}
-          {addState && (
+          {orderState.addState && (
             <>
               <Form.Control
                 style={{ margin: 10 }}
@@ -320,23 +394,26 @@ function NoteBody() {
               />
             </>
           )}
+          {orderState.confirmState && "Are you sure ?"}
+          {orderState.completeState && "Are you sure ?"}
         </Modal.Body>
+
         <Modal.Footer>
           <Button variant="info" onClick={handleClose}>
             Close
           </Button>
-          {deleteState && (
+          {orderState.deleteState && (
             <Button
               variant="danger"
               onClick={() => {
-                deleteNote(noteId);
+                deleteOrder(noteId);
               }}
             >
               {!waiting && "Delete"}
               {waiting && "Wait ... "}
             </Button>
           )}
-          {editState && (
+          {orderState.editState && (
             <Button
               variant="warning"
               onClick={() => {
@@ -347,7 +424,7 @@ function NoteBody() {
               {waiting && "Wait ... "}
             </Button>
           )}
-          {addState && (
+          {orderState.addState && (
             <Button
               variant="primary"
               onClick={() => {
@@ -355,6 +432,28 @@ function NoteBody() {
               }}
             >
               {!waiting && "Add"}
+              {waiting && "Wait ... "}
+            </Button>
+          )}
+          {orderState.confirmState && (
+            <Button
+              variant="primary"
+              onClick={() => {
+                UpdateOrderState(noteId, "confirmed");
+              }}
+            >
+              {!waiting && "Confirm"}
+              {waiting && "Wait ... "}
+            </Button>
+          )}
+          {orderState.completeState && (
+            <Button
+              variant="primary"
+              onClick={() => {
+                UpdateOrderState(noteId, "completed");
+              }}
+            >
+              {!waiting && "Done"}
               {waiting && "Wait ... "}
             </Button>
           )}
